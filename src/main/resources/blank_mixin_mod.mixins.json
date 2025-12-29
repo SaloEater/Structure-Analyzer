@@ -11,11 +11,6 @@
     "defaultRequire": 1
   },
   "mixins": [
-//    "FocusedRecipesAccessor",
-//    "InternalRecipeManagerPluginMixin",
-//    "RecipeGuiLogicMixin",
-//    "RecipeIngredientTableMixin",
-//    "RecipeManagerInternalMixin",
-//    "StructureTemplateAccessor"
+    "StructureTemplateAccessor"
   ]
 }

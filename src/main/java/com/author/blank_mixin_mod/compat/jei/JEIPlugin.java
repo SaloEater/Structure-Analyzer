@@ -3,8 +3,13 @@ package com.author.blank_mixin_mod.compat.jei;
 import com.author.blank_mixin_mod.BlankMixinMod;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
+import mezz.jei.api.constants.ModIds;
+import mezz.jei.api.constants.RecipeTypes;
+import mezz.jei.api.helpers.IJeiHelpers;
+import mezz.jei.api.registration.IAdvancedRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.library.plugins.debug.DebugSimpleRecipeManagerPlugin;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -31,5 +36,10 @@ public class JEIPlugin implements IModPlugin {
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         registration.addRecipes(LocateStructureRecipeType.INSTANCE, List.of(new LocateStructureRecipe(null)));
+    }
+
+    @Override
+    public void registerAdvanced(IAdvancedRegistration registration) {
+        registration.addTypedRecipeManagerPlugin(LocateStructureRecipeType.INSTANCE, new LocateStructureRecipeManagerPlugin());
     }
 }

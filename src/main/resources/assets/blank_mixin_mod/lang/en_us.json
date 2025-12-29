@@ -1,3 +1,7 @@
 {
-  "structure_analyzer.jei.locate_structure.title": "Structure Locator"
+  "structure_analyzer.jei.locate_structure.title": "Structure Locator",
+  "structure_analyzer.jei.button.start_search": "Start search",
+  "structure_analyzer.jei.no_results": "No structures found",
+  "structure_analyzer.jei.page_info": "Page %s/%s",
+  "structure_analyzer.jei.progress": "%s / %s"
 }
