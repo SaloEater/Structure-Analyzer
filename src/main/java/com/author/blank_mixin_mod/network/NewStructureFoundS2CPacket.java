@@ -1,0 +1,38 @@
+package com.author.blank_mixin_mod.network;
+
+import com.author.blank_mixin_mod.compat.jei.ClientSearchState;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
+
+public class NewStructureFoundS2CPacket {
+    private final String blockDescriptionId;
+    private final String structureName;
+
+    public NewStructureFoundS2CPacket(String blockDescriptionId, String structureName) {
+        this.blockDescriptionId = blockDescriptionId;
+        this.structureName = structureName;
+    }
+
+    public NewStructureFoundS2CPacket(FriendlyByteBuf buf) {
+        this.blockDescriptionId = buf.readUtf();
+        this.structureName = buf.readUtf();
+    }
+
+    public void encode(FriendlyByteBuf buf) {
+        buf.writeUtf(this.blockDescriptionId);
+        buf.writeUtf(this.structureName);
+    }
+
+    public void handle(Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+                ClientSearchState.addFoundStructure(blockDescriptionId, structureName);
+            });
+        });
+        ctx.get().setPacketHandled(true);
+    }
+}

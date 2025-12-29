@@ -5,8 +5,17 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "blank_mixin_mod.refmap.json",
   "client": [
+    "RecipesGuiMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "mixins": [
+//    "FocusedRecipesAccessor",
+//    "InternalRecipeManagerPluginMixin",
+//    "RecipeGuiLogicMixin",
+//    "RecipeIngredientTableMixin",
+//    "RecipeManagerInternalMixin",
+//    "StructureTemplateAccessor"
+  ]
 }
