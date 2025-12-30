@@ -46,6 +46,6 @@ public class LocateStructureRecipeManagerPlugin implements ISimpleRecipeManagerP
 
     @Override
     public List<LocateStructureRecipe> getAllRecipes() {
-        return List.of(new LocateStructureRecipe(null));
+        return List.of(new LocateStructureRecipe(new ItemStack(Items.AIR)));
     }
 }
