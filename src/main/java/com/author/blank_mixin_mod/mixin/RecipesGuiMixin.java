@@ -17,22 +17,6 @@ public abstract class RecipesGuiMixin {
     private void updateLayout(){}
 
     @Inject(
-            method = "show",
-            at = @At("HEAD")
-    )
-    private void blank_mixin_mod_log$ShowRecipesGui(List<IFocus<?>> focuses, CallbackInfo ci) {
-        JEIHackStorage.shouldAddRecipeType = true;
-    }
-
-    @Inject(
-            method = "show",
-            at = @At("RETURN")
-    )
-    private void blank_mixin_mod_log$ResetShowRecipesGui(List<IFocus<?>> focuses, CallbackInfo ci) {
-        JEIHackStorage.shouldAddRecipeType = false;
-    }
-
-    @Inject(
             method="render",
             at = @At("HEAD")
     )
@@ -41,6 +25,7 @@ public abstract class RecipesGuiMixin {
             return;
         }
 
+        JEIHackStorage.shouldResetLayout = true;
         this.updateLayout();
         JEIHackStorage.shouldUpdateLayout = false;
     }
