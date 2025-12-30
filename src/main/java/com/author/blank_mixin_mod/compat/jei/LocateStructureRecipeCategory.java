@@ -21,14 +21,13 @@ import mezz.jei.common.gui.elements.DrawableBlank;
 import mezz.jei.common.gui.textures.Textures;
 import mezz.jei.common.util.ImmutableRect2i;
 import mezz.jei.gui.elements.GuiIconButton;
-import mezz.jei.library.plugins.debug.DebugRecipe;
-import mezz.jei.library.plugins.debug.DebugRecipeCategory;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -37,6 +36,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStructureRecipe> {
+    // Textures
+    private static final ResourceLocation SLIDER_TEXTURE = new ResourceLocation("textures/gui/slider.png");
+    private static final int SLIDER_TEXTURE_WIDTH = 200;
+    private static final int SLIDER_TEXTURE_HEIGHT = 20;
+    private static final int SLIDER_BACKGROUND_UV_Y = 0;
+    private static final int SLIDER_FILL_UV_Y = 40;
+    private static final int SLIDER_BORDER_SIZE = 1;
+
     // Background dimensions
     private static final int BACKGROUND_WIDTH = 180;
     private static final int BACKGROUND_HEIGHT = 127;
@@ -59,7 +66,6 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
     private static final int PROGRESS_BAR_Y = 50;
     private static final int PROGRESS_BAR_WIDTH = 160;
     private static final int PROGRESS_BAR_HEIGHT = 20;
-    private static final int PROGRESS_BAR_BORDER = 1;
 
     // Result slots
     private static final int RESULT_START_X = 0;
@@ -81,9 +87,6 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
     private static final int NAV_NEXT_BUTTON_Y = 3;
 
     // Colors
-    private static final int COLOR_PROGRESS_BORDER = 0xFF8B8B8B;
-    private static final int COLOR_PROGRESS_BACKGROUND = 0xFF000000;
-    private static final int COLOR_PROGRESS_FILL = 0xFF00AA00;
     private static final int COLOR_PROGRESS_TEXT = 0xFFFFFF;
     private static final int COLOR_HEADER_SEPARATOR = 0xFF8B8B8B;
 
@@ -325,25 +328,22 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
 
     private void drawProgressBar(GuiGraphics guiGraphics, net.minecraft.client.gui.Font font,
                                  ClientSearchState.RecipeSearchState state) {
-        // Draw border
-        guiGraphics.fill(PROGRESS_BAR_X, PROGRESS_BAR_Y,
-                        PROGRESS_BAR_X + PROGRESS_BAR_WIDTH, PROGRESS_BAR_Y + PROGRESS_BAR_HEIGHT,
-                        COLOR_PROGRESS_BORDER);
-
-        // Draw background
-        guiGraphics.fill(PROGRESS_BAR_X + PROGRESS_BAR_BORDER, PROGRESS_BAR_Y + PROGRESS_BAR_BORDER,
-                        PROGRESS_BAR_X + PROGRESS_BAR_WIDTH - PROGRESS_BAR_BORDER,
-                        PROGRESS_BAR_Y + PROGRESS_BAR_HEIGHT - PROGRESS_BAR_BORDER,
-                        COLOR_PROGRESS_BACKGROUND);
+        // Draw background texture
+        guiGraphics.blitNineSliced(SLIDER_TEXTURE, PROGRESS_BAR_X, PROGRESS_BAR_Y,
+                PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT,
+                SLIDER_BORDER_SIZE, SLIDER_BORDER_SIZE, SLIDER_BORDER_SIZE, SLIDER_BORDER_SIZE,
+                SLIDER_TEXTURE_WIDTH, SLIDER_TEXTURE_HEIGHT, 0, SLIDER_BACKGROUND_UV_Y);
 
         // Draw progress fill
         if (state.searchTotal > 0) {
-            int innerWidth = PROGRESS_BAR_WIDTH - (PROGRESS_BAR_BORDER * 2);
-            int progressWidth = (int) ((state.searchCurrent / (float) state.searchTotal) * innerWidth);
-            guiGraphics.fill(PROGRESS_BAR_X + PROGRESS_BAR_BORDER, PROGRESS_BAR_Y + PROGRESS_BAR_BORDER,
-                            PROGRESS_BAR_X + PROGRESS_BAR_BORDER + progressWidth,
-                            PROGRESS_BAR_Y + PROGRESS_BAR_HEIGHT - PROGRESS_BAR_BORDER,
-                            COLOR_PROGRESS_FILL);
+            int progressWidth = (int) ((state.searchCurrent / (float) state.searchTotal) * PROGRESS_BAR_WIDTH);
+            if (progressWidth > 0) {
+                guiGraphics.blitNineSliced(SLIDER_TEXTURE, PROGRESS_BAR_X, PROGRESS_BAR_Y,
+                        progressWidth, PROGRESS_BAR_HEIGHT,
+                        SLIDER_BORDER_SIZE, SLIDER_BORDER_SIZE, SLIDER_BORDER_SIZE, SLIDER_BORDER_SIZE,
+                        SLIDER_TEXTURE_WIDTH, SLIDER_TEXTURE_HEIGHT,
+                        0, SLIDER_FILL_UV_Y);
+            }
         }
 
         // Draw progress text
