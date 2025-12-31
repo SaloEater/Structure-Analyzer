@@ -1,6 +1,7 @@
 package com.saloeater.structure_analyzer.network;
 
 import com.saloeater.structure_analyzer.compat.jei.ClientSearchState;
+import com.saloeater.structure_analyzer.util.EMIHack;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
@@ -35,6 +36,7 @@ public class ProgressUpdatedS2CPacket {
         ctx.get().enqueueWork(() -> {
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
                 ClientSearchState.updateProgress(blockDescriptionId, current, total);
+                EMIHack.reloadEMIScreen();
             });
         });
         ctx.get().setPacketHandled(true);
