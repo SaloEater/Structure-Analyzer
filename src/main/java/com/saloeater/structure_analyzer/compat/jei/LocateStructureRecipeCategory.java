@@ -286,12 +286,12 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
         if (recipe.itemStack.getItem() instanceof SpawnEggItem spawnEggItem) {
             ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(spawnEggItem.getType(null));
             if (key == null) {
-                return new SearchRequest("", "");
+                return new SearchRequest("", "", SearchRequest.TYPE_STRUCTURE);
             }
             String entityId = key.toString();
-            return new SearchRequest("", entityId);
+            return new SearchRequest("", entityId, SearchRequest.TYPE_STRUCTURE);
         }
-        return new SearchRequest(recipe.itemStack.getDescriptionId(), "");
+        return new SearchRequest(recipe.itemStack.getDescriptionId(), "", SearchRequest.TYPE_STRUCTURE);
     }
 
     private static void StartSearch() {

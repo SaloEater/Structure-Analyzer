@@ -8,25 +8,21 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class NewStructureFoundS2CPacket {
-    private final SearchRequest request;
+public class NewStructureFoundS2CPacket extends SearchRequestPacket {
     private final String structureName;
 
     public NewStructureFoundS2CPacket(SearchRequest request, String structureName) {
-        this.request = request;
+        super(request);
         this.structureName = structureName;
     }
 
     public NewStructureFoundS2CPacket(FriendlyByteBuf buf) {
-        var block = buf.readUtf();
-        var entity = buf.readUtf();
+        super(buf);
         this.structureName = buf.readUtf();
-        this.request = new SearchRequest(block, entity);
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeUtf(this.request.block());
-        buf.writeUtf(this.request.entity());
+        encodeRequest(buf);
         buf.writeUtf(this.structureName);
     }
 

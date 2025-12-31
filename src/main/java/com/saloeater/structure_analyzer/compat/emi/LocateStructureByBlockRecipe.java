@@ -29,6 +29,7 @@ public class LocateStructureByBlockRecipe extends LocateStructureRecipe {
     @Override
     public void addWidgets(WidgetHolder widgets) {
         this.setSlotItemStack(getTargetStack());
+        this.setType(SearchRequest.TYPE_STRUCTURE);
         super.addWidgets(widgets);
     }
 
@@ -45,7 +46,7 @@ public class LocateStructureByBlockRecipe extends LocateStructureRecipe {
     @Override
     public ClientSearchState.RecipeSearchState getSearchState() {
         String recipeId = itemStack.getDescriptionId();
-        return ClientSearchState.getSearchStateByBlock(recipeId);
+        return ClientSearchState.getSearchStateByStructureBlock(recipeId);
     }
 
     @Override
@@ -56,13 +57,13 @@ public class LocateStructureByBlockRecipe extends LocateStructureRecipe {
     @Override
     public void startSearch() {
         String recipeId = itemStack.getDescriptionId();
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBlock(recipeId);
+        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByStructureBlock(recipeId);
 
         if (state.state != ClientSearchState.SearchState.NOT_STARTED) {
             return;
         }
 
-        SearchRequest request = new SearchRequest(recipeId, "");
+        SearchRequest request = new SearchRequest(recipeId, "", SearchRequest.TYPE_STRUCTURE);
         ClientSearchState.startSearch(request);
         NetworkHandler.sendToServer(new StartSearchC2SPacket(request));
         EMIHack.reloadEMIScreen();

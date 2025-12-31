@@ -6,6 +6,7 @@ import com.saloeater.structure_analyzer.network.NetworkHandler;
 import com.saloeater.structure_analyzer.network.SearchRequest;
 import com.saloeater.structure_analyzer.network.StartSearchC2SPacket;
 import com.saloeater.structure_analyzer.util.EMIHack;
+import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.WidgetHolder;
 import net.minecraft.resources.ResourceKey;
@@ -22,14 +23,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 
-public class LocateStructureByEntityRecipe extends LocateStructureRecipe {
+public class LocateBiomeByEntityRecipe extends LocateStructureRecipe {
     private final String entityId;
     private ResourceLocation id;
     private EmiStack spawnEggStack;
 
-    LocateStructureByEntityRecipe(Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entityTypeEntry) {
+    LocateBiomeByEntityRecipe(Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entityTypeEntry) {
         this.spawnEggStack = getSpawnEggStack(entityTypeEntry.getValue());
-        this.id = new ResourceLocation(StructureAnalyzer.MODID, "/locate_structure" + entityTypeEntry.getKey().location().getNamespace() + "_" + entityTypeEntry.getKey().location().getPath());
+        this.id = new ResourceLocation(StructureAnalyzer.MODID, "/locate_biome" + entityTypeEntry.getKey().location().getNamespace() + "_" + entityTypeEntry.getKey().location().getPath());
         String entityIdHolder = "";
         ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(entityTypeEntry.getValue());
         if (key != null) {
@@ -41,7 +42,7 @@ public class LocateStructureByEntityRecipe extends LocateStructureRecipe {
     @Override
     public void addWidgets(WidgetHolder widgets) {
         this.setSlotItemStack(getTargetStack());
-        this.setType(SearchRequest.TYPE_STRUCTURE);
+        this.setType(SearchRequest.TYPE_BIOME);
         super.addWidgets(widgets);
     }
 
@@ -61,6 +62,10 @@ public class LocateStructureByEntityRecipe extends LocateStructureRecipe {
         return EmiStack.of(new ItemStack(spawnEgg));
     }
 
+    @Override
+    public EmiRecipeCategory getCategory() {
+        return EMIPlugin.LOCATE_BIOME_CATEGORY;
+    }
 
     @Override
     public @Nullable ResourceLocation getId() {
@@ -74,7 +79,7 @@ public class LocateStructureByEntityRecipe extends LocateStructureRecipe {
 
     @Override
     public ClientSearchState.RecipeSearchState getSearchState() {
-        return ClientSearchState.getSearchStateByStructureEntity(entityId);
+        return ClientSearchState.getSearchStateByBiomeEntity(entityId);
     }
 
     @Override
@@ -84,13 +89,13 @@ public class LocateStructureByEntityRecipe extends LocateStructureRecipe {
 
     @Override
     public void startSearch() {
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByStructureEntity(entityId);
+        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBiomeEntity(entityId);
 
         if (state.state != ClientSearchState.SearchState.NOT_STARTED) {
             return;
         }
 
-        SearchRequest request = new SearchRequest("", entityId, SearchRequest.TYPE_STRUCTURE);
+        SearchRequest request = new SearchRequest("", entityId, SearchRequest.TYPE_BIOME);
         ClientSearchState.startSearch(request);
         NetworkHandler.sendToServer(new StartSearchC2SPacket(request));
         EMIHack.reloadEMIScreen();

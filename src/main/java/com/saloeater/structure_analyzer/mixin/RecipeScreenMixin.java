@@ -21,7 +21,7 @@ public abstract class RecipeScreenMixin {
     private int tab;
 
     @Inject(
-            method="m_6050_",//"mouseScrolled",
+            method="mouseScrolled",
             at = @At("RETURN")
     )
     private void structure_analyzer$OnMouseScrolled(double mouseX, double mouseY, double delta, CallbackInfoReturnable<Boolean> cir) {
@@ -35,7 +35,7 @@ public abstract class RecipeScreenMixin {
     }
 
     @Inject(
-            method="m_7979_",//"mouseDragged",
+            method="mouseDragged",
             at = @At("RETURN")
     )
     private void structure_analyzer$OnMouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY, CallbackInfoReturnable<Boolean> cir) {
@@ -49,7 +49,7 @@ public abstract class RecipeScreenMixin {
     }
 
     @Inject(
-            method="m_6375_",//"mouseClicked",
+            method="mouseClicked",
             at = @At("RETURN")
     )
     private void structure_analyzer$OnMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
@@ -63,7 +63,7 @@ public abstract class RecipeScreenMixin {
     }
 
     @Inject(
-            method="m_6348_",//"mouseReleased",
+            method="mouseReleased",
             at = @At("RETURN")
     )
     private void structure_analyzer$OnMouseReleased(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {

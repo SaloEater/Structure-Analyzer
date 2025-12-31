@@ -5,22 +5,18 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class StartSearchC2SPacket {
-    private final SearchRequest request;
+public class StartSearchC2SPacket extends SearchRequestPacket {
 
     public StartSearchC2SPacket(SearchRequest request) {
-        this.request = request;
+        super(request);
     }
 
     public StartSearchC2SPacket(FriendlyByteBuf buf) {
-        var block = buf.readUtf();
-        var entity = buf.readUtf();
-        this.request = new SearchRequest(block, entity);
+        super(buf);
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeUtf(this.request.block());
-        buf.writeUtf(this.request.entity());
+        encodeRequest(buf);
     }
 
     public void handle(Supplier<NetworkEvent.Context> ctx) {

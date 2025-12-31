@@ -5,5 +5,6 @@
   "structure_analyzer.jei.progress": "%s / %s",
   "structure_analyzer.jei.results_found.prefix": "Found",
   "structure_analyzer.jei.results_found.suffix": "structures",
-  "emi.category.structure_analyzer.locate_structure": "Structure Analyzer"
+  "emi.category.structure_analyzer.locate_structure": "Structure Analyzer",
+  "emi.category.structure_analyzer.locate_biome": "Biome Analyzer"
 }

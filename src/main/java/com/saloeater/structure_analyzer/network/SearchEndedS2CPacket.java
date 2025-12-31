@@ -11,22 +11,18 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 
-public class SearchEndedS2CPacket {
-    private final SearchRequest request;
+public class SearchEndedS2CPacket extends SearchRequestPacket {
 
-    public SearchEndedS2CPacket(SearchRequest blockDescriptionId) {
-        this.request = blockDescriptionId;
+    public SearchEndedS2CPacket(SearchRequest request) {
+        super(request);
     }
 
     public SearchEndedS2CPacket(FriendlyByteBuf buf) {
-        var block = buf.readUtf();
-        var entity = buf.readUtf();
-        this.request = new SearchRequest(block, entity);
+        super(buf);
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeUtf(this.request.block());
-        buf.writeUtf(this.request.entity());
+        encodeRequest(buf);
     }
 
     public void handle(Supplier<NetworkEvent.Context> ctx) {

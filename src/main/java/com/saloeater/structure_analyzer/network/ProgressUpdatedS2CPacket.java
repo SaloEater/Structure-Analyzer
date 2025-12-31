@@ -9,28 +9,24 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class ProgressUpdatedS2CPacket {
-    private final SearchRequest request;
+public class ProgressUpdatedS2CPacket extends SearchRequestPacket {
     private final int current;
     private final int total;
 
     public ProgressUpdatedS2CPacket(SearchRequest request, int current, int total) {
-        this.request = request;
+        super(request);
         this.current = current;
         this.total = total;
     }
 
     public ProgressUpdatedS2CPacket(FriendlyByteBuf buf) {
-        var block = buf.readUtf();
-        var entity = buf.readUtf();
+        super(buf);
         this.current = buf.readInt();
         this.total = buf.readInt();
-        this.request = new SearchRequest(block, entity);
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeUtf(this.request.block());
-        buf.writeUtf(this.request.entity());
+        encodeRequest(buf);
         buf.writeInt(this.current);
         buf.writeInt(this.total);
     }

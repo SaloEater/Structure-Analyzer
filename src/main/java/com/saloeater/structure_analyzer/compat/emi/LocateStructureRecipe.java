@@ -74,8 +74,14 @@ public abstract class LocateStructureRecipe implements EmiRecipe {
     private static int scrollPos = 0;
     private static boolean isScrolling = false;
 
+    private static int type;
+
     protected void setSlotItemStack(EmiStack stack) {
         ((SlotWidgetAccessor) targetStackSlot).SetStack(stack);
+    }
+
+    protected void setType(int type) {
+        this.type = type;
     }
 
     @Override

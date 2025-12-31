@@ -27,12 +27,16 @@ public class ClientSearchState {
         return searchStateMap.computeIfAbsent(request, k -> new RecipeSearchState());
     }
 
-    public static RecipeSearchState getSearchStateByBlock(String block) {
-        return getSearchState(new SearchRequest(block, ""));
+    public static RecipeSearchState getSearchStateByStructureBlock(String block) {
+        return getSearchState(new SearchRequest(block, "", SearchRequest.TYPE_STRUCTURE));
     }
 
-    public static RecipeSearchState getSearchStateByEntity(String entity) {
-        return getSearchState(new SearchRequest("", entity));
+    public static RecipeSearchState getSearchStateByStructureEntity(String entity) {
+        return getSearchState(new SearchRequest("", entity, SearchRequest.TYPE_STRUCTURE));
+    }
+
+    public static RecipeSearchState getSearchStateByBiomeEntity(String entity) {
+        return getSearchState(new SearchRequest("", entity, SearchRequest.TYPE_BIOME));
     }
 
     public static void startSearch(SearchRequest request) {
