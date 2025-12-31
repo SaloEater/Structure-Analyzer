@@ -7,6 +7,7 @@ import com.saloeater.structure_analyzer.network.SearchRequest;
 import com.saloeater.structure_analyzer.network.StartSearchC2SPacket;
 import com.saloeater.structure_analyzer.util.EMIHack;
 import dev.emi.emi.api.stack.EmiStack;
+import dev.emi.emi.api.widget.WidgetHolder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -35,6 +36,12 @@ public class LocateStructureByEntityRecipe extends LocateStructureRecipe {
             entityIdHolder = key.toString();
         }
         this.entityId = entityIdHolder;
+    }
+
+    @Override
+    public void addWidgets(WidgetHolder widgets) {
+        this.setSlotItemStack(getTargetStack());
+        super.addWidgets(widgets);
     }
 
     private EmiStack getSpawnEggStack(EntityType<?> type) {

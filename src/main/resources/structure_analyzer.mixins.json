@@ -13,6 +13,7 @@
   },
   "mixins": [
     "RecipeScreenMixin",
+    "SlotWidgetAccessor",
     "StructureTemplateAccessor"
   ]
 }

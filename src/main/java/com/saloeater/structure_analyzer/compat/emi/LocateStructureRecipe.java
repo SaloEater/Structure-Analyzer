@@ -2,10 +2,12 @@ package com.saloeater.structure_analyzer.compat.emi;
 
 import com.saloeater.structure_analyzer.StructureAnalyzer;
 import com.saloeater.structure_analyzer.compat.jei.ClientSearchState;
+import com.saloeater.structure_analyzer.mixin.SlotWidgetAccessor;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
+import dev.emi.emi.api.widget.SlotWidget;
 import dev.emi.emi.api.widget.WidgetHolder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -66,9 +68,15 @@ public abstract class LocateStructureRecipe implements EmiRecipe {
     private static final int SCROLL_HANDLE_HEIGHT = 15;
     private static final int SCROLL_BORDER_SIZE = 1;
 
+    private static SlotWidget targetStackSlot = new SlotWidget(null, HEADER_ITEM_SLOT_X, HEADER_ITEM_SLOT_Y);
+
     // Scroll state (only one recipe visible at a time)
     private static int scrollPos = 0;
     private static boolean isScrolling = false;
+
+    protected void setSlotItemStack(EmiStack stack) {
+        ((SlotWidgetAccessor) targetStackSlot).SetStack(stack);
+    }
 
     @Override
     public boolean supportsRecipeTree() {
@@ -133,8 +141,7 @@ public abstract class LocateStructureRecipe implements EmiRecipe {
         widgets.addTexture(SLIDER_TEXTURE, 0, HEADER_ITEM_SLOT_Y, BACKGROUND_WIDTH, HEADER_HEIGHT, 3, 3, 14, 14, 256, 526);
 
         // Add header slot for input item
-        EmiStack targetStack = getTargetStack();
-        widgets.addSlot(targetStack, HEADER_ITEM_SLOT_X, HEADER_ITEM_SLOT_Y);
+        widgets.add(targetStackSlot);
 
         if (state.state == ClientSearchState.SearchState.NOT_STARTED) {
             // Draw search button
