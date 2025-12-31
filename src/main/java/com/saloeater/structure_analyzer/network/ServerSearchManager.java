@@ -98,6 +98,11 @@ public class ServerSearchManager {
     }
 
     private static void searchStructures(ServerPlayer player, SearchRequest request) {
+        if (request.block().isEmpty() && request.entity().isEmpty()) {
+            LOGGER.warn("Received structure search request with empty block and entity for player {}", player.getName().getString());
+            return;
+        }
+
         var manager = player.getServer().getStructureManager();
         var templates = manager.listTemplates().toList();
 

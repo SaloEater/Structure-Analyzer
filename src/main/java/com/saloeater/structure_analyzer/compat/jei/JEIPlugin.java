@@ -24,20 +24,27 @@ public class JEIPlugin implements IModPlugin {
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
-        // Register treasure bag category
+        // Register locate structure category
         registration.addRecipeCategories(
                 new LocateStructureRecipeCategory(registration.getJeiHelpers().getGuiHelper())
+        );
+
+        // Register locate biome by entity category
+        registration.addRecipeCategories(
+                new LocateBiomeByEntityRecipeCategory(registration.getJeiHelpers().getGuiHelper())
         );
     }
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         registration.addRecipes(LocateStructureRecipeType.INSTANCE, List.of(new LocateStructureRecipe(new ItemStack(Items.AIR))));
+        registration.addRecipes(LocateBiomeByEntityRecipeType.INSTANCE, List.of(new LocateBiomeByEntityRecipe(new ItemStack(Items.AIR))));
     }
 
     @Override
     public void registerAdvanced(IAdvancedRegistration registration) {
         registration.addTypedRecipeManagerPlugin(LocateStructureRecipeType.INSTANCE, new LocateStructureRecipeManagerPlugin());
+        registration.addTypedRecipeManagerPlugin(LocateBiomeByEntityRecipeType.INSTANCE, new LocateBiomeByEntityRecipeManagerPlugin());
     }
 
     @Override

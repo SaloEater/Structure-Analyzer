@@ -10,57 +10,57 @@ import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.registries.ForgeRegistries;
 
-public class LocateStructureRecipeCategory extends AbstractLocateRecipeCategory<LocateStructureRecipe> {
-    private static LocateStructureRecipe currentRecipe;
+public class LocateBiomeByEntityRecipeCategory extends AbstractLocateRecipeCategory<LocateBiomeByEntityRecipe> {
+    private static LocateBiomeByEntityRecipe currentRecipe;
 
-    public LocateStructureRecipeCategory(IGuiHelper guiHelper) {
-        super(guiHelper, new ItemStack(Blocks.OAK_DOOR));
+    public LocateBiomeByEntityRecipeCategory(IGuiHelper guiHelper) {
+        super(guiHelper, new ItemStack(Blocks.GRASS_BLOCK));
     }
 
     @Override
-    public RecipeType<LocateStructureRecipe> getRecipeType() {
-        return LocateStructureRecipeType.INSTANCE;
+    public RecipeType<LocateBiomeByEntityRecipe> getRecipeType() {
+        return LocateBiomeByEntityRecipeType.INSTANCE;
     }
 
     @Override
     public Component getTitle() {
-        return Component.translatable("structure_analyzer.jei.locate_structure.title");
+        return Component.translatable("structure_analyzer.jei.locate_biome_by_entity.title");
     }
 
     @Override
-    protected ItemStack getItemStack(LocateStructureRecipe recipe) {
+    protected ItemStack getItemStack(LocateBiomeByEntityRecipe recipe) {
         return recipe.itemStack;
     }
 
     @Override
-    protected void setCurrentRecipe(LocateStructureRecipe recipe) {
+    protected void setCurrentRecipe(LocateBiomeByEntityRecipe recipe) {
         currentRecipe = recipe;
     }
 
     @Override
     protected SearchRequest getSearchRequest() {
         if (currentRecipe == null || currentRecipe.itemStack == null) {
-            return new SearchRequest("", "", SearchRequest.TYPE_STRUCTURE);
+            return new SearchRequest("", "", SearchRequest.TYPE_BIOME);
         }
 
         if (currentRecipe.itemStack.getItem() instanceof SpawnEggItem spawnEggItem) {
             ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(spawnEggItem.getType(null));
             if (key == null) {
-                return new SearchRequest("", "", SearchRequest.TYPE_STRUCTURE);
+                return new SearchRequest("", "", SearchRequest.TYPE_BIOME);
             }
             String entityId = key.toString();
-            return new SearchRequest("", entityId, SearchRequest.TYPE_STRUCTURE);
+            return new SearchRequest("", entityId, SearchRequest.TYPE_BIOME);
         }
-        return new SearchRequest(currentRecipe.itemStack.getDescriptionId(), "", SearchRequest.TYPE_STRUCTURE);
+        return new SearchRequest("", "", SearchRequest.TYPE_BIOME);
     }
 
     @Override
     protected String getResultsPrefixKey() {
-        return "structure_analyzer.jei.results_found.prefix";
+        return "structure_analyzer.jei.biomes_found.prefix";
     }
 
     @Override
     protected String getResultsSuffixKey() {
-        return "structure_analyzer.jei.results_found.suffix";
+        return "structure_analyzer.jei.biomes_found.suffix";
     }
 }
