@@ -56,8 +56,9 @@ public class LocateStructureByBlockRecipe extends LocateStructureRecipe {
             return;
         }
 
-        ClientSearchState.startSearch(recipeId);
-        NetworkHandler.sendToServer(new StartSearchC2SPacket(new SearchRequest(recipeId, "")));
+        SearchRequest request = new SearchRequest(recipeId, "");
+        ClientSearchState.startSearch(request);
+        NetworkHandler.sendToServer(new StartSearchC2SPacket(request));
         EMIHack.reloadEMIScreen();
     }
 }

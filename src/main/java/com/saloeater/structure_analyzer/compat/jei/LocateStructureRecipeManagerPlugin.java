@@ -5,6 +5,7 @@ import mezz.jei.api.recipe.advanced.ISimpleRecipeManagerPlugin;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public class LocateStructureRecipeManagerPlugin implements ISimpleRecipeManagerP
         }
 
         var itemStack = oItemStack.get();
-        return itemStack.getItem() instanceof BlockItem block && ForgeRegistries.BLOCKS.containsValue(block.getBlock());
+        return itemStack.getItem() instanceof BlockItem block && ForgeRegistries.BLOCKS.containsValue(block.getBlock()) || itemStack.getItem() instanceof SpawnEggItem;
     }
 
     @Override

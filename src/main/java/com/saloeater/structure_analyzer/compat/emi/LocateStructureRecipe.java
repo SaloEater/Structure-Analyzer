@@ -30,7 +30,7 @@ public abstract class LocateStructureRecipe implements EmiRecipe {
     private static final int HEADER_HEIGHT = 18;
     private static final int HEADER_ITEM_SLOT_X = 0;
     private static final int HEADER_ITEM_SLOT_Y = 0;
-    private static final int HEADER_RESULTS_Y = 4;
+    private static final int HEADER_RESULTS_Y = 5;
     private static final int SLOT_SIZE = 18;
 
     // Search button
@@ -130,10 +130,7 @@ public abstract class LocateStructureRecipe implements EmiRecipe {
             handleMouseDragged(dragMouseX, dragMouseY, dragDeltaX, dragDeltaY, state);
         }
 
-        // Draw header separator line
-        widgets.addDrawable(0, HEADER_ITEM_SLOT_Y, BACKGROUND_WIDTH, HEADER_PADDING, (graphics, mouseX, mouseY, delta) -> {
-            graphics.fill(0, 0, BACKGROUND_WIDTH, HEADER_HEIGHT, COLOR_HEADER_SEPARATOR);
-        });
+        widgets.addTexture(SLIDER_TEXTURE, 0, HEADER_ITEM_SLOT_Y, BACKGROUND_WIDTH, HEADER_HEIGHT, 3, 3, 14, 14, 256, 526);
 
         // Add header slot for input item
         EmiStack targetStack = getTargetStack();

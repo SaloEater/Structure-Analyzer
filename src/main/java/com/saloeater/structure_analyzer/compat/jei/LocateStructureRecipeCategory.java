@@ -26,7 +26,9 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 
@@ -138,7 +140,7 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
         builder.addSlot(RecipeIngredientRole.OUTPUT, HEADER_ITEM_SLOT_X, HEADER_ITEM_SLOT_Y)
                 .addItemStack(recipe.itemStack);
 
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBlock(recipeId);
+        ClientSearchState.RecipeSearchState state = GetSearchRecipeState();
         if (state.state == ClientSearchState.SearchState.COMPLETED && !state.foundStructures.isEmpty()) {
             boolean isEvenRow = true;
             var i = 0;
@@ -154,7 +156,7 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
 
     @Override
     public void createRecipeExtras(IRecipeExtrasBuilder builder, LocateStructureRecipe recipe, IFocusGroup focuses) {
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBlock(recipe.itemStack.getDescriptionId());
+        ClientSearchState.RecipeSearchState state = GetSearchRecipeState();
 
         if (state.state == ClientSearchState.SearchState.COMPLETED && !state.foundStructures.isEmpty()) {
             // Get all output slots
@@ -177,7 +179,7 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
     @Override
     public void draw(LocateStructureRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics guiGraphics, double mouseX, double mouseY) {
         var font = Minecraft.getInstance().font;
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBlock(recipe.itemStack.getDescriptionId());
+        ClientSearchState.RecipeSearchState state = GetSearchRecipeState();
 
         guiGraphics.fill(
                 RenderType.gui(),
@@ -229,7 +231,7 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
 
     @Override
     public boolean handleInput(LocateStructureRecipe recipe, double mouseX, double mouseY, InputConstants.Key input) {
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBlock(recipe.itemStack.getDescriptionId());
+        ClientSearchState.RecipeSearchState state = GetSearchRecipeState();
 
         if (state.state == ClientSearchState.SearchState.NOT_STARTED && input.getValue() == InputConstants.MOUSE_BUTTON_LEFT) {
             if (isMouseOverButton(mouseX, mouseY, SEARCH_BUTTON_X, SEARCH_BUTTON_Y, SEARCH_BUTTON_WIDTH, SEARCH_BUTTON_HEIGHT)) {
@@ -274,15 +276,27 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
         guiGraphics.drawString(font, progressText, textX, textY, COLOR_PROGRESS_TEXT, true);
     }
 
-    private static void StartSearch() {
+    private static ClientSearchState.RecipeSearchState GetSearchRecipeState() {
+        var searchRequest = GetSearchRequest();
+        return ClientSearchState.getSearchState(searchRequest);
+    }
+
+    private static SearchRequest GetSearchRequest() {
         LocateStructureRecipe recipe = LocateStructureRecipeCategory.Recipe;
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBlock(recipe.itemStack.getDescriptionId());
-
-        if (state.state != ClientSearchState.SearchState.NOT_STARTED) {
-            return;
+        if (recipe.itemStack.getItem() instanceof SpawnEggItem spawnEggItem) {
+            ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(spawnEggItem.getType(null));
+            if (key == null) {
+                return new SearchRequest("", "");
+            }
+            String entityId = key.toString();
+            return new SearchRequest("", entityId);
         }
+        return new SearchRequest(recipe.itemStack.getDescriptionId(), "");
+    }
 
-        ClientSearchState.startSearch(recipe.itemStack.getDescriptionId());
-        NetworkHandler.sendToServer(new StartSearchC2SPacket(new SearchRequest(recipe.itemStack.getDescriptionId(), "")));
+    private static void StartSearch() {
+        var request = GetSearchRequest();
+        ClientSearchState.startSearch(request);
+        NetworkHandler.sendToServer(new StartSearchC2SPacket(request));
     }
 }

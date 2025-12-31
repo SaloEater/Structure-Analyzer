@@ -14,25 +14,36 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SpawnEggItem;
+import net.minecraftforge.common.ForgeSpawnEggItem;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
 
 public class LocateStructureByEntityRecipe extends LocateStructureRecipe {
-    private final String recipeId;
+    private final String entityId;
     private ResourceLocation id;
     private EmiStack spawnEggStack;
 
     LocateStructureByEntityRecipe(Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entityTypeEntry) {
         this.spawnEggStack = getSpawnEggStack(entityTypeEntry.getValue());
         this.id = new ResourceLocation(StructureAnalyzer.MODID, "/locate_structure" + entityTypeEntry.getKey().location().getNamespace() + "_" + entityTypeEntry.getKey().location().getPath());
-        this.recipeId = entityTypeEntry.getValue().getDescriptionId();
+        String entityIdHolder = "";
+        ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(entityTypeEntry.getValue());
+        if (key != null) {
+            entityIdHolder = key.toString();
+        }
+        this.entityId = entityIdHolder;
     }
 
     private EmiStack getSpawnEggStack(EntityType<?> type) {
         // Try to find the spawn egg for this entity type
         Item spawnEgg = SpawnEggItem.byId(type);
+
+        if (spawnEgg == null) {
+            spawnEgg = ForgeSpawnEggItem.fromEntityType(type);
+        }
 
         // If spawn egg doesn't exist, fall back to a default item
         if (spawnEgg == null || spawnEgg == Items.AIR) {
@@ -55,7 +66,7 @@ public class LocateStructureByEntityRecipe extends LocateStructureRecipe {
 
     @Override
     public ClientSearchState.RecipeSearchState getSearchState() {
-        return ClientSearchState.getSearchStateByBlock(recipeId);
+        return ClientSearchState.getSearchStateByEntity(entityId);
     }
 
     @Override
@@ -65,14 +76,15 @@ public class LocateStructureByEntityRecipe extends LocateStructureRecipe {
 
     @Override
     public void startSearch() {
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBlock(recipeId);
+        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByEntity(entityId);
 
         if (state.state != ClientSearchState.SearchState.NOT_STARTED) {
             return;
         }
 
-        ClientSearchState.startSearch(recipeId);
-        NetworkHandler.sendToServer(new StartSearchC2SPacket(new SearchRequest(recipeId, "")));
+        SearchRequest request = new SearchRequest("", entityId);
+        ClientSearchState.startSearch(request);
+        NetworkHandler.sendToServer(new StartSearchC2SPacket(request));
         EMIHack.reloadEMIScreen();
     }
 }

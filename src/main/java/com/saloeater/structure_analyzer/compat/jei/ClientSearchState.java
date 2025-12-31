@@ -28,18 +28,15 @@ public class ClientSearchState {
     }
 
     public static RecipeSearchState getSearchStateByBlock(String block) {
-        var stateO = searchStateMap.keySet().stream().filter(i -> i.block().equals(block)).findFirst();
-        if (stateO.isPresent()) {
-            return searchStateMap.get(stateO.get());
-        }
-
-        var state = new RecipeSearchState();
-        searchStateMap.put(new SearchRequest(block, ""), state);
-        return state;
+        return getSearchState(new SearchRequest(block, ""));
     }
 
-    public static void startSearch(String block) {
-        RecipeSearchState state = getSearchStateByBlock(block);
+    public static RecipeSearchState getSearchStateByEntity(String entity) {
+        return getSearchState(new SearchRequest("", entity));
+    }
+
+    public static void startSearch(SearchRequest request) {
+        RecipeSearchState state = getSearchState(request);
         state.state = SearchState.IN_PROGRESS;
         state.searchCurrent = 0;
         state.searchTotal = 0;

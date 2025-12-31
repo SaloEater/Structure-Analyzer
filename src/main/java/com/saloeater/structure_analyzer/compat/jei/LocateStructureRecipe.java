@@ -6,7 +6,7 @@ import net.minecraft.world.item.ItemStack;
 public class LocateStructureRecipe {
     public final ItemStack itemStack;
 
-    public LocateStructureRecipe(ItemStack blockDescriptionId) {
-        this.itemStack = blockDescriptionId;
+    public LocateStructureRecipe(ItemStack itemstack) {
+        this.itemStack = itemstack;
     }
 }
