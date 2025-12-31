@@ -6,28 +6,27 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class StartSearchC2SPacket {
-    private final String blockDescriptionId;
+    private final SearchRequest request;
 
-    public StartSearchC2SPacket(String blockDescriptionId) {
-        this.blockDescriptionId = blockDescriptionId;
+    public StartSearchC2SPacket(SearchRequest request) {
+        this.request = request;
     }
 
     public StartSearchC2SPacket(FriendlyByteBuf buf) {
-        this.blockDescriptionId = buf.readUtf();
+        var block = buf.readUtf();
+        var entity = buf.readUtf();
+        this.request = new SearchRequest(block, entity);
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeUtf(this.blockDescriptionId);
+        buf.writeUtf(this.request.block());
+        buf.writeUtf(this.request.entity());
     }
 
     public void handle(Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
-            ServerSearchManager.startSearch(ctx.get().getSender(), blockDescriptionId);
+            ServerSearchManager.startSearch(ctx.get().getSender(), request);
         });
         ctx.get().setPacketHandled(true);
-    }
-
-    public String getBlockDescriptionId() {
-        return blockDescriptionId;
     }
 }

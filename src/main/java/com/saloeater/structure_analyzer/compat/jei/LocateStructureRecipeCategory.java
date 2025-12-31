@@ -2,6 +2,7 @@ package com.saloeater.structure_analyzer.compat.jei;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.saloeater.structure_analyzer.network.NetworkHandler;
+import com.saloeater.structure_analyzer.network.SearchRequest;
 import com.saloeater.structure_analyzer.network.StartSearchC2SPacket;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -17,12 +18,10 @@ import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import mezz.jei.common.gui.elements.DrawableBlank;
-import mezz.jei.common.util.ImmutableRect2i;
-import mezz.jei.gui.elements.GuiIconButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -81,7 +80,7 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
     private final IDrawable background;
     private final IGuiHelper guiHelper;
     private final IDrawable icon;
-    private final GuiIconButton searchButton;
+    private final Button searchButton;
     private static LocateStructureRecipe Recipe;
     private static String lastRecipeId = null;
 
@@ -95,8 +94,8 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
         this.icon = guiHelper.createDrawableItemStack(new ItemStack(Blocks.OAK_DOOR));
 
         // Create search button
-        this.searchButton = new GuiIconButton(new DrawableBlank(0, 0), b -> LocateStructureRecipeCategory.StartSearch());
-        this.searchButton.updateBounds(new ImmutableRect2i(SEARCH_BUTTON_X, SEARCH_BUTTON_Y, SEARCH_BUTTON_WIDTH, SEARCH_BUTTON_HEIGHT));
+        this.searchButton = Button.builder(Component.translatable("structure_analyzer.jei.button.start_search"), button -> LocateStructureRecipeCategory.StartSearch()).bounds(SEARCH_BUTTON_X, SEARCH_BUTTON_Y, SEARCH_BUTTON_WIDTH, SEARCH_BUTTON_HEIGHT)
+            .build();
 
         // Calculate text position (centered in button)
         this.searchButtonTextX = SEARCH_BUTTON_X + SEARCH_BUTTON_WIDTH / 2;
@@ -139,7 +138,7 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
         builder.addSlot(RecipeIngredientRole.OUTPUT, HEADER_ITEM_SLOT_X, HEADER_ITEM_SLOT_Y)
                 .addItemStack(recipe.itemStack);
 
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchState(recipeId);
+        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBlock(recipeId);
         if (state.state == ClientSearchState.SearchState.COMPLETED && !state.foundStructures.isEmpty()) {
             boolean isEvenRow = true;
             var i = 0;
@@ -155,7 +154,7 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
 
     @Override
     public void createRecipeExtras(IRecipeExtrasBuilder builder, LocateStructureRecipe recipe, IFocusGroup focuses) {
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchState(recipe.itemStack.getDescriptionId());
+        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBlock(recipe.itemStack.getDescriptionId());
 
         if (state.state == ClientSearchState.SearchState.COMPLETED && !state.foundStructures.isEmpty()) {
             // Get all output slots
@@ -178,7 +177,7 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
     @Override
     public void draw(LocateStructureRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics guiGraphics, double mouseX, double mouseY) {
         var font = Minecraft.getInstance().font;
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchState(recipe.itemStack.getDescriptionId());
+        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBlock(recipe.itemStack.getDescriptionId());
 
         guiGraphics.fill(
                 RenderType.gui(),
@@ -191,7 +190,6 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
 
         if (state.state == ClientSearchState.SearchState.NOT_STARTED) {
             searchButton.render(guiGraphics, (int) mouseX, (int) mouseY, 0f);
-            guiGraphics.drawCenteredString(font, Component.translatable("structure_analyzer.jei.button.start_search").getString(), searchButtonTextX, searchButtonTextY, ChatFormatting.WHITE.getColor());
         } else if (state.state == ClientSearchState.SearchState.IN_PROGRESS) {
             drawProgressBar(guiGraphics, font, state);
         } else if (state.state == ClientSearchState.SearchState.COMPLETED) {
@@ -231,7 +229,7 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
 
     @Override
     public boolean handleInput(LocateStructureRecipe recipe, double mouseX, double mouseY, InputConstants.Key input) {
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchState(recipe.itemStack.getDescriptionId());
+        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBlock(recipe.itemStack.getDescriptionId());
 
         if (state.state == ClientSearchState.SearchState.NOT_STARTED && input.getValue() == InputConstants.MOUSE_BUTTON_LEFT) {
             if (isMouseOverButton(mouseX, mouseY, SEARCH_BUTTON_X, SEARCH_BUTTON_Y, SEARCH_BUTTON_WIDTH, SEARCH_BUTTON_HEIGHT)) {
@@ -278,13 +276,13 @@ public class LocateStructureRecipeCategory implements IRecipeCategory<LocateStru
 
     private static void StartSearch() {
         LocateStructureRecipe recipe = LocateStructureRecipeCategory.Recipe;
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchState(recipe.itemStack.getDescriptionId());
+        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByBlock(recipe.itemStack.getDescriptionId());
 
         if (state.state != ClientSearchState.SearchState.NOT_STARTED) {
             return;
         }
 
         ClientSearchState.startSearch(recipe.itemStack.getDescriptionId());
-        NetworkHandler.sendToServer(new StartSearchC2SPacket(recipe.itemStack.getDescriptionId()));
+        NetworkHandler.sendToServer(new StartSearchC2SPacket(new SearchRequest(recipe.itemStack.getDescriptionId(), "")));
     }
 }

@@ -14,7 +14,7 @@ public class ServerSearchManager {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<UUID, CompletableFuture<Void>> activeSearches = new HashMap<>();
 
-    public static void startSearch(ServerPlayer player, String blockDescriptionId) {
+    public static void startSearch(ServerPlayer player, SearchRequest request) {
         if (player == null) {
             LOGGER.warn("Received search request from null player");
             return;
@@ -27,7 +27,7 @@ public class ServerSearchManager {
             stopSearch(player);
         }
 
-        LOGGER.info("Starting structure search for player {} with block: {}", player.getName().getString(), blockDescriptionId);
+        LOGGER.info("Starting structure search for player {} with block: {}", player.getName().getString(), request.block());
 
         CompletableFuture<Void> searchTask = CompletableFuture.runAsync(() -> {
             try {
@@ -37,7 +37,7 @@ public class ServerSearchManager {
                 int total = templates.size();
                 int current = 0;
 
-                NetworkHandler.sendToPlayer(new ProgressUpdatedS2CPacket(blockDescriptionId, current, total), player);
+                NetworkHandler.sendToPlayer(new ProgressUpdatedS2CPacket(request, current, total), player);
 
                 for (var templateId : templates) {
                     if (Thread.currentThread().isInterrupted()) {
@@ -48,44 +48,60 @@ public class ServerSearchManager {
                     var templateO = manager.get(templateId);
                     if (templateO.isEmpty()) {
                         current++;
-                        NetworkHandler.sendToPlayer(new ProgressUpdatedS2CPacket(blockDescriptionId, current, total), player);
+                        NetworkHandler.sendToPlayer(new ProgressUpdatedS2CPacket(request, current, total), player);
                         continue;
                     }
 
                     var template = templateO.get();
-                    var palettes = ((StructureTemplateAccessor) template).getPalettes();
+                    StructureTemplateAccessor accessor = (StructureTemplateAccessor) template;
+                    if (!request.block().isEmpty()) {
+                        var palettes = accessor.getPalettes();
 
-                    boolean found = false;
-                    for (var palette : palettes) {
-                        var blocks = palette.blocks();
-                        for (var blockInfo : blocks) {
-                            var blockState = blockInfo.state();
+                        boolean found = false;
+                        for (var palette : palettes) {
+                            var blocks = palette.blocks();
+                            for (var blockInfo : blocks) {
+                                var blockState = blockInfo.state();
 
-                            if (blockState.getBlock().getDescriptionId().equals(blockDescriptionId)) {
+                                if (blockState.getBlock().getDescriptionId().equals(request.block())) {
+                                    NetworkHandler.sendToPlayer(
+                                            new NewStructureFoundS2CPacket(request, templateId.toString()),
+                                            player
+                                    );
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (found) break;
+                        }
+                    } else {
+                        var entities = accessor.getEntityInfoList();
+                        for (var entityInfo : entities) {
+                            var entityType = entityInfo.nbt.getString("id");
+
+                            if (entityType.equals(request.entity())) {
                                 NetworkHandler.sendToPlayer(
-                                        new NewStructureFoundS2CPacket(blockDescriptionId, templateId.toString()),
+                                        new NewStructureFoundS2CPacket(request, templateId.toString()),
                                         player
                                 );
-                                found = true;
                                 break;
                             }
                         }
-                        if (found) break;
                     }
 
                     current++;
 
                     if (current % 10 == 0 || current == total) {
-                        NetworkHandler.sendToPlayer(new ProgressUpdatedS2CPacket(blockDescriptionId, current, total), player);
+                        NetworkHandler.sendToPlayer(new ProgressUpdatedS2CPacket(request, current, total), player);
                     }
                 }
 
-                NetworkHandler.sendToPlayer(new SearchEndedS2CPacket(blockDescriptionId), player);
+                NetworkHandler.sendToPlayer(new SearchEndedS2CPacket(request), player);
                 LOGGER.info("Search completed for player {}", player.getName().getString());
 
             } catch (Exception e) {
                 LOGGER.error("Error during structure search for player {}", player.getName().getString(), e);
-                NetworkHandler.sendToPlayer(new SearchEndedS2CPacket(blockDescriptionId), player);
+                NetworkHandler.sendToPlayer(new SearchEndedS2CPacket(request), player);
             } finally {
                 activeSearches.remove(playerId);
             }

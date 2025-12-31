@@ -12,24 +12,27 @@ import java.util.function.Supplier;
 
 
 public class SearchEndedS2CPacket {
-    private final String blockDescriptionId;
+    private final SearchRequest request;
 
-    public SearchEndedS2CPacket(String blockDescriptionId) {
-        this.blockDescriptionId = blockDescriptionId;
+    public SearchEndedS2CPacket(SearchRequest blockDescriptionId) {
+        this.request = blockDescriptionId;
     }
 
     public SearchEndedS2CPacket(FriendlyByteBuf buf) {
-        this.blockDescriptionId = buf.readUtf();
+        var block = buf.readUtf();
+        var entity = buf.readUtf();
+        this.request = new SearchRequest(block, entity);
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeUtf(this.blockDescriptionId);
+        buf.writeUtf(this.request.block());
+        buf.writeUtf(this.request.entity());
     }
 
     public void handle(Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                ClientSearchState.markSearchCompleted(blockDescriptionId);
+                ClientSearchState.markSearchCompleted(request);
                 JEIHackStorage.shouldUpdateLayout = true;
                 EMIHack.reloadEMIScreen();
             });

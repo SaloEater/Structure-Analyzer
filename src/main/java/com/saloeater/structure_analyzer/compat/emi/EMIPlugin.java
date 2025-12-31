@@ -22,7 +22,12 @@ public class EMIPlugin implements EmiPlugin {
 
         var blocksEntries = ForgeRegistries.BLOCKS.getEntries();
         for (var blockEntry : blocksEntries) {
-            registry.addRecipe(new LocateStructureRecipe(blockEntry));
+            registry.addRecipe(new LocateStructureByBlockRecipe(blockEntry));
+        }
+
+        var entityEntries = ForgeRegistries.ENTITY_TYPES.getEntries();
+        for (var entityEntry : entityEntries) {
+            registry.addRecipe(new LocateStructureByEntityRecipe(entityEntry));
         }
     }
 }

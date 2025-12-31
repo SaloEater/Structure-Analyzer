@@ -2,9 +2,6 @@ package com.saloeater.structure_analyzer.compat.emi;
 
 import com.saloeater.structure_analyzer.StructureAnalyzer;
 import com.saloeater.structure_analyzer.compat.jei.ClientSearchState;
-import com.saloeater.structure_analyzer.network.NetworkHandler;
-import com.saloeater.structure_analyzer.network.StartSearchC2SPacket;
-import com.saloeater.structure_analyzer.util.EMIHack;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiIngredient;
@@ -14,16 +11,11 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 
-public class LocateStructureRecipe implements EmiRecipe {
+public abstract class LocateStructureRecipe implements EmiRecipe {
     // Textures
     private static final ResourceLocation SLIDER_TEXTURE = new ResourceLocation("textures/gui/slider.png");
     private static final ResourceLocation SEARCH_BUTTON_TEXTURE = new ResourceLocation(StructureAnalyzer.MODID,"textures/gui/slider_short.png");
@@ -74,19 +66,9 @@ public class LocateStructureRecipe implements EmiRecipe {
     private static final int SCROLL_HANDLE_HEIGHT = 15;
     private static final int SCROLL_BORDER_SIZE = 1;
 
-    private Block block;
-    private ResourceLocation id;
-    private ItemStack itemStack;
-
     // Scroll state (only one recipe visible at a time)
     private static int scrollPos = 0;
     private static boolean isScrolling = false;
-
-    LocateStructureRecipe(Map.Entry<ResourceKey<Block>, Block> blockEntry) {
-        this.block = blockEntry.getValue();
-        this.itemStack = new ItemStack(block.asItem());
-        this.id = new ResourceLocation(StructureAnalyzer.MODID, "/locate_structure" + blockEntry.getKey().location().getNamespace() + "_" + blockEntry.getKey().location().getPath());
-    }
 
     @Override
     public boolean supportsRecipeTree() {
@@ -99,18 +81,8 @@ public class LocateStructureRecipe implements EmiRecipe {
     }
 
     @Override
-    public @Nullable ResourceLocation getId() {
-        return id;
-    }
-
-    @Override
     public List<EmiIngredient> getInputs() {
         return List.of();
-    }
-
-    @Override
-    public List<EmiStack> getOutputs() {
-        return List.of(EmiStack.of(itemStack));
     }
 
     @Override
@@ -123,10 +95,11 @@ public class LocateStructureRecipe implements EmiRecipe {
         return BACKGROUND_HEIGHT;
     }
 
+    public abstract ClientSearchState.RecipeSearchState getSearchState();
+
     @Override
     public void addWidgets(WidgetHolder widgets) {
-        String recipeId = itemStack.getDescriptionId();
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchState(recipeId);
+        var state = getSearchState();
 
         LocateStructureCategory category = (LocateStructureCategory) getCategory();
 
@@ -163,7 +136,8 @@ public class LocateStructureRecipe implements EmiRecipe {
         });
 
         // Add header slot for input item
-        widgets.addSlot(EmiStack.of(itemStack), HEADER_ITEM_SLOT_X, HEADER_ITEM_SLOT_Y);
+        EmiStack targetStack = getTargetStack();
+        widgets.addSlot(targetStack, HEADER_ITEM_SLOT_X, HEADER_ITEM_SLOT_Y);
 
         if (state.state == ClientSearchState.SearchState.NOT_STARTED) {
             // Draw search button
@@ -174,7 +148,7 @@ public class LocateStructureRecipe implements EmiRecipe {
                 SEARCH_BUTTON_TEXTURE,
                 () -> true,
                 (mouseX, mouseY, button) -> {
-                    startSearch(recipeId);
+                    startSearch();
                 });
 
             MutableComponent startSearchText = Component.translatable("structure_analyzer.jei.button.start_search");
@@ -247,6 +221,8 @@ public class LocateStructureRecipe implements EmiRecipe {
         }
     }
 
+    public abstract EmiStack getTargetStack();
+
     private void drawProgressBar(WidgetHolder widgets, ClientSearchState.RecipeSearchState state) {
         // Draw background texture
         widgets.addTexture(SLIDER_TEXTURE, PROGRESS_BAR_X, PROGRESS_BAR_Y,
@@ -302,20 +278,7 @@ public class LocateStructureRecipe implements EmiRecipe {
             HEADER_RESULTS_Y, ChatFormatting.WHITE.getColor(), true);
     }
 
-    private void startSearch(String recipeId) {
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchState(recipeId);
-
-        if (state.state != ClientSearchState.SearchState.NOT_STARTED) {
-            return;
-        }
-
-        // Reset scroll position when starting a new search
-        scrollPos = 0;
-
-        ClientSearchState.startSearch(recipeId);
-        NetworkHandler.sendToServer(new StartSearchC2SPacket(recipeId));
-        EMIHack.reloadEMIScreen();
-    }
+    public abstract void startSearch();
 
     private void handleMouseClicked(double mouseX, double mouseY, ClientSearchState.RecipeSearchState state) {
         // Only handle clicks when there are results to scroll

@@ -10,24 +10,27 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class ProgressUpdatedS2CPacket {
-    private final String blockDescriptionId;
+    private final SearchRequest request;
     private final int current;
     private final int total;
 
-    public ProgressUpdatedS2CPacket(String blockDescriptionId, int current, int total) {
-        this.blockDescriptionId = blockDescriptionId;
+    public ProgressUpdatedS2CPacket(SearchRequest request, int current, int total) {
+        this.request = request;
         this.current = current;
         this.total = total;
     }
 
     public ProgressUpdatedS2CPacket(FriendlyByteBuf buf) {
-        this.blockDescriptionId = buf.readUtf();
+        var block = buf.readUtf();
+        var entity = buf.readUtf();
         this.current = buf.readInt();
         this.total = buf.readInt();
+        this.request = new SearchRequest(block, entity);
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeUtf(this.blockDescriptionId);
+        buf.writeUtf(this.request.block());
+        buf.writeUtf(this.request.entity());
         buf.writeInt(this.current);
         buf.writeInt(this.total);
     }
@@ -35,7 +38,7 @@ public class ProgressUpdatedS2CPacket {
     public void handle(Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                ClientSearchState.updateProgress(blockDescriptionId, current, total);
+                ClientSearchState.updateProgress(request, current, total);
                 EMIHack.reloadEMIScreen();
             });
         });

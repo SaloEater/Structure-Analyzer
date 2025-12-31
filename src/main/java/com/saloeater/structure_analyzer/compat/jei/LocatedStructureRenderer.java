@@ -2,7 +2,6 @@ package com.saloeater.structure_analyzer.compat.jei;
 
 import mezz.jei.api.ingredients.IIngredientHelper;
 import mezz.jei.api.ingredients.IIngredientRenderer;
-import mezz.jei.common.gui.JeiTooltip;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -31,9 +30,7 @@ public class LocatedStructureRenderer  implements IIngredientRenderer<LocatedStr
 
     @Override
     public List<Component> getTooltip(LocatedStructureIngredient locatedStructureIngredient, TooltipFlag tooltipFlag) {
-        JeiTooltip tooltip = new JeiTooltip();
         String displayName = this.ingredientHelper.getDisplayName(locatedStructureIngredient);
-        tooltip.add(Component.literal(displayName));
-        return tooltip.toLegacyToComponents();
+        return List.of(Component.literal(displayName));
     }
 }

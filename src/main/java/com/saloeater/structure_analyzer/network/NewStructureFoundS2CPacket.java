@@ -9,28 +9,31 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class NewStructureFoundS2CPacket {
-    private final String blockDescriptionId;
+    private final SearchRequest request;
     private final String structureName;
 
-    public NewStructureFoundS2CPacket(String blockDescriptionId, String structureName) {
-        this.blockDescriptionId = blockDescriptionId;
+    public NewStructureFoundS2CPacket(SearchRequest request, String structureName) {
+        this.request = request;
         this.structureName = structureName;
     }
 
     public NewStructureFoundS2CPacket(FriendlyByteBuf buf) {
-        this.blockDescriptionId = buf.readUtf();
+        var block = buf.readUtf();
+        var entity = buf.readUtf();
         this.structureName = buf.readUtf();
+        this.request = new SearchRequest(block, entity);
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeUtf(this.blockDescriptionId);
+        buf.writeUtf(this.request.block());
+        buf.writeUtf(this.request.entity());
         buf.writeUtf(this.structureName);
     }
 
     public void handle(Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                ClientSearchState.addFoundStructure(blockDescriptionId, structureName);
+                ClientSearchState.addFoundStructure(request, structureName);
             });
         });
         ctx.get().setPacketHandled(true);
