@@ -1,6 +1,5 @@
 package com.saloeater.structure_analyzer.compat.jei;
 
-import com.saloeater.structure_analyzer.StructureAnalyzer;
 import mezz.jei.api.ingredients.IIngredientHelper;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.subtypes.UidContext;
@@ -15,21 +14,17 @@ public class LocatedStructureHelper  implements IIngredientHelper<LocatedStructu
 
     @Override
     public String getDisplayName(LocatedStructureIngredient locatedStructureIngredient) {
-        return locatedStructureIngredient.structureName();
+        return locatedStructureIngredient.structureName().toString();
     }
 
     @Override
     public String getUniqueId(LocatedStructureIngredient locatedStructureIngredient, UidContext uidContext) {
-        return getIngredientType().getUid() + "_" + locatedStructureIngredient.structureName();
+        return getIngredientType().getUid() + "_" + locatedStructureIngredient.structureName().toString();
     }
 
     @Override
     public ResourceLocation getResourceLocation(LocatedStructureIngredient locatedStructureIngredient) {
-        var namespace = StructureAnalyzer.MODID;
-        if (!locatedStructureIngredient.structureName().isEmpty()) {
-            return ResourceLocation.parse(locatedStructureIngredient.structureName());
-        }
-        return new ResourceLocation(namespace, "unknown_structure");
+        return new ResourceLocation(locatedStructureIngredient.structureName().getNamespace(), "structure");
     }
 
     @Override
@@ -44,6 +39,6 @@ public class LocatedStructureHelper  implements IIngredientHelper<LocatedStructu
 
     @Override
     public String getDisplayModId(LocatedStructureIngredient ingredient) {
-        return "Located Structure";
+        return ingredient.structureName().getNamespace();
     }
 }

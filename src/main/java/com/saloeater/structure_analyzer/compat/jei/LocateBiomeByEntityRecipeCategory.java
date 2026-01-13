@@ -40,18 +40,14 @@ public class LocateBiomeByEntityRecipeCategory extends AbstractLocateRecipeCateg
     @Override
     protected SearchRequest getSearchRequest() {
         if (currentRecipe == null || currentRecipe.itemStack == null) {
-            return new SearchRequest("", "", SearchRequest.TYPE_BIOME);
+            return new SearchRequest(null, null, SearchRequest.TYPE_BIOME);
         }
 
         if (currentRecipe.itemStack.getItem() instanceof SpawnEggItem spawnEggItem) {
-            ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(spawnEggItem.getType(null));
-            if (key == null) {
-                return new SearchRequest("", "", SearchRequest.TYPE_BIOME);
-            }
-            String entityId = key.toString();
-            return new SearchRequest("", entityId, SearchRequest.TYPE_BIOME);
+            ResourceLocation entityId = ForgeRegistries.ENTITY_TYPES.getKey(spawnEggItem.getType(null));
+            return new SearchRequest(null, entityId, SearchRequest.TYPE_BIOME);
         }
-        return new SearchRequest("", "", SearchRequest.TYPE_BIOME);
+        return new SearchRequest(null, null, SearchRequest.TYPE_BIOME);
     }
 
     @Override

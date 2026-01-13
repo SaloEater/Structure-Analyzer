@@ -1,10 +1,9 @@
 package com.saloeater.structure_analyzer.compat.emi;
 
 import com.saloeater.structure_analyzer.StructureAnalyzer;
+import com.saloeater.structure_analyzer.compat.jei.ClientSearchManager;
 import com.saloeater.structure_analyzer.compat.jei.ClientSearchState;
-import com.saloeater.structure_analyzer.network.NetworkHandler;
 import com.saloeater.structure_analyzer.network.SearchRequest;
-import com.saloeater.structure_analyzer.network.StartSearchC2SPacket;
 import com.saloeater.structure_analyzer.util.EMIHack;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.WidgetHolder;
@@ -45,8 +44,9 @@ public class LocateStructureByBlockRecipe extends LocateStructureRecipe {
 
     @Override
     public ClientSearchState.RecipeSearchState getSearchState() {
-        String recipeId = itemStack.getDescriptionId();
-        return ClientSearchState.getSearchStateByStructureBlock(recipeId);
+        var block = net.minecraft.world.level.block.Block.byItem(itemStack.getItem());
+        ResourceLocation blockId = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(block);
+        return ClientSearchState.getSearchStateByStructureBlock(blockId);
     }
 
     @Override
@@ -56,16 +56,17 @@ public class LocateStructureByBlockRecipe extends LocateStructureRecipe {
 
     @Override
     public void startSearch() {
-        String recipeId = itemStack.getDescriptionId();
-        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByStructureBlock(recipeId);
+        var block = net.minecraft.world.level.block.Block.byItem(itemStack.getItem());
+        ResourceLocation blockId = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(block);
+        ClientSearchState.RecipeSearchState state = ClientSearchState.getSearchStateByStructureBlock(blockId);
 
         if (state.state != ClientSearchState.SearchState.NOT_STARTED) {
             return;
         }
 
-        SearchRequest request = new SearchRequest(recipeId, "", SearchRequest.TYPE_STRUCTURE);
+        SearchRequest request = new SearchRequest(blockId, null, SearchRequest.TYPE_STRUCTURE);
         ClientSearchState.startSearch(request);
-        NetworkHandler.sendToServer(new StartSearchC2SPacket(request));
+        ClientSearchManager.startSearch(request);
         EMIHack.reloadEMIScreen();
     }
 }

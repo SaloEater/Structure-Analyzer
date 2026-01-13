@@ -1,9 +1,7 @@
 package com.saloeater.structure_analyzer.compat.jei;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.saloeater.structure_analyzer.network.NetworkHandler;
 import com.saloeater.structure_analyzer.network.SearchRequest;
-import com.saloeater.structure_analyzer.network.StartSearchC2SPacket;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
@@ -131,7 +129,7 @@ public abstract class AbstractLocateRecipeCategory<T> implements IRecipeCategory
         if (state.state == ClientSearchState.SearchState.COMPLETED && !state.foundStructures.isEmpty()) {
             boolean isEvenRow = true;
             var i = 0;
-            for (String structureName : state.foundStructures) {
+            for (var structureName : state.foundStructures) {
                 builder.addInputSlot().addIngredient(LocatedStructureIngredient.TYPE, new LocatedStructureIngredient(structureName, isEvenRow));
                 i++;
                 if (i % gridColumns == 0) {
@@ -271,7 +269,7 @@ public abstract class AbstractLocateRecipeCategory<T> implements IRecipeCategory
     protected void startSearch() {
         var request = getSearchRequest();
         ClientSearchState.startSearch(request);
-        NetworkHandler.sendToServer(new StartSearchC2SPacket(request));
+        ClientSearchManager.startSearch(request);
     }
 
     // Abstract methods to be implemented by subclasses

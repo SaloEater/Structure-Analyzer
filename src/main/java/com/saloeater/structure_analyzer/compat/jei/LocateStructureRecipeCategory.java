@@ -40,18 +40,18 @@ public class LocateStructureRecipeCategory extends AbstractLocateRecipeCategory<
     @Override
     protected SearchRequest getSearchRequest() {
         if (currentRecipe == null || currentRecipe.itemStack == null) {
-            return new SearchRequest("", "", SearchRequest.TYPE_STRUCTURE);
+            return new SearchRequest(null, null, SearchRequest.TYPE_STRUCTURE);
         }
 
         if (currentRecipe.itemStack.getItem() instanceof SpawnEggItem spawnEggItem) {
-            ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(spawnEggItem.getType(null));
-            if (key == null) {
-                return new SearchRequest("", "", SearchRequest.TYPE_STRUCTURE);
-            }
-            String entityId = key.toString();
-            return new SearchRequest("", entityId, SearchRequest.TYPE_STRUCTURE);
+            ResourceLocation entityId = ForgeRegistries.ENTITY_TYPES.getKey(spawnEggItem.getType(null));
+            return new SearchRequest(null, entityId, SearchRequest.TYPE_STRUCTURE);
         }
-        return new SearchRequest(currentRecipe.itemStack.getDescriptionId(), "", SearchRequest.TYPE_STRUCTURE);
+
+        // Assume it's a block item
+        var block = net.minecraft.world.level.block.Block.byItem(currentRecipe.itemStack.getItem());
+        ResourceLocation blockId = ForgeRegistries.BLOCKS.getKey(block);
+        return new SearchRequest(blockId, null, SearchRequest.TYPE_STRUCTURE);
     }
 
     @Override

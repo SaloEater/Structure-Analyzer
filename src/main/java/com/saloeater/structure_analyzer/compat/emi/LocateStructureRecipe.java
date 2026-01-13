@@ -220,7 +220,7 @@ public abstract class LocateStructureRecipe implements EmiRecipe {
                         int index = row * RESULT_GRID_COLUMNS + col;
                         if (index >= totalResults) break;
 
-                        String structureName = state.foundStructures.get(index);
+                        var structureName = state.foundStructures.get(index);
                         int displayRow = row - startRow;
                         int slotX = col * SLOT_SIZE;
                         int slotY = RESULT_GRID_Y + displayRow * SLOT_SIZE;

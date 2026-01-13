@@ -31,6 +31,6 @@ public class LocatedStructureRenderer  implements IIngredientRenderer<LocatedStr
     @Override
     public List<Component> getTooltip(LocatedStructureIngredient locatedStructureIngredient, TooltipFlag tooltipFlag) {
         String displayName = this.ingredientHelper.getDisplayName(locatedStructureIngredient);
-        return List.of(Component.literal(displayName));
+        return List.of(Component.translatable(displayName));
     }
 }

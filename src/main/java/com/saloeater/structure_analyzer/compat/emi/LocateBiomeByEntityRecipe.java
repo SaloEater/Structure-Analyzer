@@ -1,10 +1,9 @@
 package com.saloeater.structure_analyzer.compat.emi;
 
 import com.saloeater.structure_analyzer.StructureAnalyzer;
+import com.saloeater.structure_analyzer.compat.jei.ClientSearchManager;
 import com.saloeater.structure_analyzer.compat.jei.ClientSearchState;
-import com.saloeater.structure_analyzer.network.NetworkHandler;
 import com.saloeater.structure_analyzer.network.SearchRequest;
-import com.saloeater.structure_analyzer.network.StartSearchC2SPacket;
 import com.saloeater.structure_analyzer.util.EMIHack;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.stack.EmiStack;
@@ -24,19 +23,14 @@ import java.util.List;
 import java.util.Map;
 
 public class LocateBiomeByEntityRecipe extends LocateStructureRecipe {
-    private final String entityId;
+    private final ResourceLocation entityId;
     private ResourceLocation id;
     private EmiStack spawnEggStack;
 
     LocateBiomeByEntityRecipe(Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entityTypeEntry) {
         this.spawnEggStack = getSpawnEggStack(entityTypeEntry.getValue());
         this.id = new ResourceLocation(StructureAnalyzer.MODID, "/locate_biome" + entityTypeEntry.getKey().location().getNamespace() + "_" + entityTypeEntry.getKey().location().getPath());
-        String entityIdHolder = "";
-        ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(entityTypeEntry.getValue());
-        if (key != null) {
-            entityIdHolder = key.toString();
-        }
-        this.entityId = entityIdHolder;
+        this.entityId = ForgeRegistries.ENTITY_TYPES.getKey(entityTypeEntry.getValue());
     }
 
     @Override
@@ -95,9 +89,9 @@ public class LocateBiomeByEntityRecipe extends LocateStructureRecipe {
             return;
         }
 
-        SearchRequest request = new SearchRequest("", entityId, SearchRequest.TYPE_BIOME);
+        SearchRequest request = new SearchRequest(null, entityId, SearchRequest.TYPE_BIOME);
         ClientSearchState.startSearch(request);
-        NetworkHandler.sendToServer(new StartSearchC2SPacket(request));
+        ClientSearchManager.startSearch(request);
         EMIHack.reloadEMIScreen();
     }
 }

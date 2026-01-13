@@ -1,6 +1,7 @@
 package com.saloeater.structure_analyzer.compat.jei;
 
 import com.saloeater.structure_analyzer.network.SearchRequest;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +19,7 @@ public class ClientSearchState {
         public SearchState state = SearchState.NOT_STARTED;
         public int searchTotal = 0;
         public int searchCurrent = 0;
-        public List<String> foundStructures = new ArrayList<>();
+        public List<ResourceLocation> foundStructures = new ArrayList<>();
     }
 
     private static final Map<SearchRequest, RecipeSearchState> searchStateMap = new HashMap<>();
@@ -27,16 +28,16 @@ public class ClientSearchState {
         return searchStateMap.computeIfAbsent(request, k -> new RecipeSearchState());
     }
 
-    public static RecipeSearchState getSearchStateByStructureBlock(String block) {
-        return getSearchState(new SearchRequest(block, "", SearchRequest.TYPE_STRUCTURE));
+    public static RecipeSearchState getSearchStateByStructureBlock(ResourceLocation block) {
+        return getSearchState(new SearchRequest(block, null, SearchRequest.TYPE_STRUCTURE));
     }
 
-    public static RecipeSearchState getSearchStateByStructureEntity(String entity) {
-        return getSearchState(new SearchRequest("", entity, SearchRequest.TYPE_STRUCTURE));
+    public static RecipeSearchState getSearchStateByStructureEntity(ResourceLocation entity) {
+        return getSearchState(new SearchRequest(null, entity, SearchRequest.TYPE_STRUCTURE));
     }
 
-    public static RecipeSearchState getSearchStateByBiomeEntity(String entity) {
-        return getSearchState(new SearchRequest("", entity, SearchRequest.TYPE_BIOME));
+    public static RecipeSearchState getSearchStateByBiomeEntity(ResourceLocation entity) {
+        return getSearchState(new SearchRequest(null, entity, SearchRequest.TYPE_BIOME));
     }
 
     public static void startSearch(SearchRequest request) {
@@ -53,7 +54,7 @@ public class ClientSearchState {
         state.searchTotal = total;
     }
 
-    public static void addFoundStructure(SearchRequest request, String structureName) {
+    public static void addFoundStructure(SearchRequest request, ResourceLocation structureName) {
         RecipeSearchState state = getSearchState(request);
         if (!state.foundStructures.contains(structureName)) {
             state.foundStructures.add(structureName);

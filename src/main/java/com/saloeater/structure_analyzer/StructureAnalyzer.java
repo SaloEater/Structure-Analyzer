@@ -1,7 +1,6 @@
 package com.saloeater.structure_analyzer;
 
 import com.mojang.logging.LogUtils;
-import com.saloeater.structure_analyzer.network.NetworkHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -24,7 +23,6 @@ public class StructureAnalyzer
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        event.enqueueWork(NetworkHandler::register);
         LOGGER.info("Network handler registered");
     }
 }

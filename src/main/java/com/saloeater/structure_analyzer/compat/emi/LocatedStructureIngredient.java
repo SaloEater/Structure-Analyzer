@@ -13,12 +13,12 @@ import net.minecraft.world.level.block.Blocks;
 import java.util.List;
 
 public class LocatedStructureIngredient extends EmiStack {
-    private String name;
+    private ResourceLocation name;
     private boolean isEvenRow;
     private int slotX;
     private int slotY;
 
-    public LocatedStructureIngredient(String name, boolean isEvenRow, int slotX, int slotY) {
+    public LocatedStructureIngredient(ResourceLocation name, boolean isEvenRow, int slotX, int slotY) {
         this.name = name;
         this.isEvenRow = isEvenRow;
         this.slotX = slotX;
@@ -57,7 +57,7 @@ public class LocatedStructureIngredient extends EmiStack {
 
     @Override
     public ResourceLocation getId() {
-        return new ResourceLocation(name);
+        return name;
     }
 
     @Override
@@ -73,7 +73,7 @@ public class LocatedStructureIngredient extends EmiStack {
 
     @Override
     public List<ClientTooltipComponent> getTooltip() {
-        return List.of(ClientTooltipComponent.create(Component.literal(this.name).withStyle(ChatFormatting.WHITE).getVisualOrderText()));
+        return List.of(ClientTooltipComponent.create(Component.literal(this.name.toLanguageKey()).withStyle(ChatFormatting.WHITE).getVisualOrderText()));
     }
 
     @Override

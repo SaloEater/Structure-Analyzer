@@ -1,8 +1,9 @@
 package com.saloeater.structure_analyzer.compat.jei;
 
 import mezz.jei.api.ingredients.IIngredientType;
+import net.minecraft.resources.ResourceLocation;
 
-public record LocatedStructureIngredient(String structureName, boolean isEvenRow) {
+public record LocatedStructureIngredient(ResourceLocation structureName, boolean isEvenRow) {
     public static final IIngredientType<LocatedStructureIngredient> TYPE = new IIngredientType<>() {
         @Override
         public String getUid() {
