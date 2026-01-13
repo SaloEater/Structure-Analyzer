@@ -224,7 +224,7 @@ public abstract class LocateStructureRecipe implements EmiRecipe {
                         int displayRow = row - startRow;
                         int slotX = col * SLOT_SIZE;
                         int slotY = RESULT_GRID_Y + displayRow * SLOT_SIZE;
-                        widgets.addSlot(new LocatedStructureIngredient(structureName, row % 2 == 0, slotX, slotY), slotX, slotY);
+                        widgets.addSlot(new LocatedStructureIngredient(structureName, row % 2 == 0, slotX, slotY, getSearchType()), slotX, slotY);
                     }
                 }
             }
@@ -232,6 +232,8 @@ public abstract class LocateStructureRecipe implements EmiRecipe {
     }
 
     public abstract EmiStack getTargetStack();
+
+    public abstract int getSearchType();
 
     private void drawProgressBar(WidgetHolder widgets, ClientSearchState.RecipeSearchState state) {
         // Draw background texture

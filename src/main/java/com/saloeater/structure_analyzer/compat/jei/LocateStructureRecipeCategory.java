@@ -63,4 +63,9 @@ public class LocateStructureRecipeCategory extends AbstractLocateRecipeCategory<
     protected String getResultsSuffixKey() {
         return "structure_analyzer.jei.results_found.suffix";
     }
+
+    @Override
+    protected int getSearchType() {
+        return SearchRequest.TYPE_STRUCTURE;
+    }
 }

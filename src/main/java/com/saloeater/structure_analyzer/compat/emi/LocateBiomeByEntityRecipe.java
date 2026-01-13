@@ -94,4 +94,9 @@ public class LocateBiomeByEntityRecipe extends LocateStructureRecipe {
         ClientSearchManager.startSearch(request);
         EMIHack.reloadEMIScreen();
     }
+
+    @Override
+    public int getSearchType() {
+        return SearchRequest.TYPE_BIOME;
+    }
 }

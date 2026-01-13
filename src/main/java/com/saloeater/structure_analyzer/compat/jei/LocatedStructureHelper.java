@@ -14,7 +14,13 @@ public class LocatedStructureHelper  implements IIngredientHelper<LocatedStructu
 
     @Override
     public String getDisplayName(LocatedStructureIngredient locatedStructureIngredient) {
-        return locatedStructureIngredient.structureName().toString();
+        String registryName;
+        if (locatedStructureIngredient.isBiomeType()) {
+            registryName = "biome";
+        } else {
+            registryName = "structure";
+        }
+        return locatedStructureIngredient.structureName().toLanguageKey(registryName);
     }
 
     @Override

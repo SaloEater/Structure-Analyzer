@@ -109,10 +109,10 @@ dependencies {
     compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
     implementation fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
 
-    compileOnly fg.deobf("dev.emi:emi-forge:${emi_version}")
-    compileOnly fg.deobf("curse.maven:emiloot-681783:7265857")
-    compileOnly fg.deobf("curse.maven:fzzyconfig-1005914:7331237")
-    compileOnly fg.deobf("curse.maven:kff-351264:7291067")
+    implementation fg.deobf("dev.emi:emi-forge:${emi_version}")
+    implementation fg.deobf("curse.maven:emiloot-681783:7265857")
+    runtimeOnly fg.deobf("curse.maven:fzzyconfig-1005914:7331237")
+    runtimeOnly fg.deobf("curse.maven:kff-351264:7291067")
 }
 
 

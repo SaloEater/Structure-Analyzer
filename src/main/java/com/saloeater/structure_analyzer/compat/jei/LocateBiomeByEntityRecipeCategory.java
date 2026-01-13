@@ -59,4 +59,9 @@ public class LocateBiomeByEntityRecipeCategory extends AbstractLocateRecipeCateg
     protected String getResultsSuffixKey() {
         return "structure_analyzer.jei.biomes_found.suffix";
     }
+
+    @Override
+    protected int getSearchType() {
+        return SearchRequest.TYPE_BIOME;
+    }
 }

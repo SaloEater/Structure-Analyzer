@@ -20,10 +20,20 @@ public class LocatedStructureRenderer  implements IIngredientRenderer<LocatedStr
     @Override
     public void render(GuiGraphics guiGraphics, LocatedStructureIngredient locatedStructureIngredient) {
         ItemStack itemStack;
-        if (locatedStructureIngredient.isEvenRow()) {
-            itemStack = new ItemStack(Blocks.OAK_DOOR);
+        if (locatedStructureIngredient.isStructureType()) {
+            // Structures: Oak/Birch doors
+            if (locatedStructureIngredient.isEvenRow()) {
+                itemStack = new ItemStack(Blocks.OAK_DOOR);
+            } else {
+                itemStack = new ItemStack(Blocks.BIRCH_DOOR);
+            }
         } else {
-            itemStack = new ItemStack(Blocks.BIRCH_DOOR);
+            // Biomes: Grass/Dirt
+            if (locatedStructureIngredient.isEvenRow()) {
+                itemStack = new ItemStack(Blocks.GRASS_BLOCK);
+            } else {
+                itemStack = new ItemStack(Blocks.DIRT);
+            }
         }
         guiGraphics.renderFakeItem(itemStack, 0, 0);
     }

@@ -129,8 +129,9 @@ public abstract class AbstractLocateRecipeCategory<T> implements IRecipeCategory
         if (state.state == ClientSearchState.SearchState.COMPLETED && !state.foundStructures.isEmpty()) {
             boolean isEvenRow = true;
             var i = 0;
+            int searchType = getSearchType();
             for (var structureName : state.foundStructures) {
-                builder.addInputSlot().addIngredient(LocatedStructureIngredient.TYPE, new LocatedStructureIngredient(structureName, isEvenRow));
+                builder.addInputSlot().addIngredient(LocatedStructureIngredient.TYPE, new LocatedStructureIngredient(structureName, isEvenRow, searchType));
                 i++;
                 if (i % gridColumns == 0) {
                     isEvenRow = !isEvenRow;
@@ -278,4 +279,5 @@ public abstract class AbstractLocateRecipeCategory<T> implements IRecipeCategory
     protected abstract SearchRequest getSearchRequest();
     protected abstract String getResultsPrefixKey();
     protected abstract String getResultsSuffixKey();
+    protected abstract int getSearchType();
 }
