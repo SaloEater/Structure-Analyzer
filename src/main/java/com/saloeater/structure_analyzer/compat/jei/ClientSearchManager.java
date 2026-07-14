@@ -8,7 +8,9 @@ import com.saloeater.structure_analyzer.util.JEIHackStorage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.FileToIdConverter;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
@@ -145,13 +147,15 @@ public class ClientSearchManager {
         Map<ResourceLocation, InputStream> structureMap = new HashMap<>();
 
         for (var pack : packs) {
-            pack.listResources(PackType.SERVER_DATA, "minecraft", "structures", (resourceLocation, ioSupplier) -> {
-                try {
-                    structureMap.put(resourceLocation, ioSupplier.get());
-                } catch (IOException e) {
-                    LOGGER.error("Error reading structure from pack: {}", resourceLocation, e);
-                }
-            });
+            for (String namespace : pack.getNamespaces(PackType.SERVER_DATA)) {
+                pack.listResources(PackType.SERVER_DATA, namespace, "structures", (resourceLocation, ioSupplier) -> {
+                    try {
+                        structureMap.put(resourceLocation, ioSupplier.get());
+                    } catch (IOException e) {
+                        LOGGER.error("Error reading structure from pack: {}", resourceLocation, e);
+                    }
+                });
+            }
         }
 
         int total = structureMap.size();
@@ -210,6 +214,20 @@ public class ClientSearchManager {
                     }
                 }
 
+                // Search by spawners that spawn the entity
+                if (!found && request.entity() != null) {
+                    outer:
+                    for (var palette : accessor.getPalettes()) {
+                        for (var blockInfo : palette.blocks()) {
+                            CompoundTag blockNbt = blockInfo.nbt();
+                            if (blockNbt != null && spawnerSpawnsEntity(blockNbt, request.entity())) {
+                                found = true;
+                                break outer;
+                            }
+                        }
+                    }
+                }
+
                 if (found) {
                     ResourceLocation structureName = lister.fileToId(structureId);
                     LOGGER.info("Found structure: {}", structureName);
@@ -228,5 +246,44 @@ public class ClientSearchManager {
                 EMIHack.reloadEMIScreen();
             });
         }
+    }
+
+    // Matches any block entity using the vanilla spawner NBT format (SpawnData/SpawnPotentials),
+    // including modded spawner blocks that reuse it
+    private static boolean spawnerSpawnsEntity(CompoundTag blockNbt, ResourceLocation entity) {
+        if (blockNbt.contains("SpawnData", Tag.TAG_COMPOUND)
+                && matchesSpawnEntry(blockNbt.getCompound("SpawnData"), entity)) {
+            return true;
+        }
+        if (blockNbt.contains("SpawnPotentials", Tag.TAG_LIST)) {
+            ListTag potentials = blockNbt.getList("SpawnPotentials", Tag.TAG_COMPOUND);
+            for (int i = 0; i < potentials.size(); i++) {
+                CompoundTag potential = potentials.getCompound(i);
+                // 1.18+ format
+                if (potential.contains("data", Tag.TAG_COMPOUND)
+                        && matchesSpawnEntry(potential.getCompound("data"), entity)) {
+                    return true;
+                }
+                // pre-1.18 format, in case a datapack ships old templates (they bypass DataFixers here)
+                if (potential.contains("Entity", Tag.TAG_COMPOUND)
+                        && matchesEntityId(potential.getCompound("Entity"), entity)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean matchesSpawnEntry(CompoundTag spawnData, ResourceLocation entity) {
+        // 1.18+: {entity: {id: ...}}; pre-1.18: {id: ...}
+        if (spawnData.contains("entity", Tag.TAG_COMPOUND)) {
+            return matchesEntityId(spawnData.getCompound("entity"), entity);
+        }
+        return matchesEntityId(spawnData, entity);
+    }
+
+    private static boolean matchesEntityId(CompoundTag tag, ResourceLocation entity) {
+        return tag.contains("id", Tag.TAG_STRING)
+                && entity.equals(ResourceLocation.tryParse(tag.getString("id")));
     }
 }

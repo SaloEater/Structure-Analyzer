@@ -113,6 +113,8 @@ dependencies {
     implementation fg.deobf("curse.maven:emiloot-681783:7265857")
     runtimeOnly fg.deobf("curse.maven:fzzyconfig-1005914:7331237")
     runtimeOnly fg.deobf("curse.maven:kff-351264:7291067")
+
+    runtimeOnly fg.deobf("curse.maven:dungeons-arise-442508:4983862")
 }
 
 
