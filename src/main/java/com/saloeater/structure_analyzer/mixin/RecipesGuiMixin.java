@@ -14,7 +14,7 @@ public abstract class RecipesGuiMixin {
     private void updateLayout(){}
 
     @Inject(
-            method="render",
+            method="m_88315_", //render
             at = @At("HEAD")
     )
     private void structure_analyzer_log$RenderRecipesGui(CallbackInfo ci) {
