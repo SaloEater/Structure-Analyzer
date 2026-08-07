@@ -1,12 +1,10 @@
 package com.saloeater.structure_analyzer.compat.jei;
 
 import com.mojang.logging.LogUtils;
-import com.saloeater.structure_analyzer.mixin.StructureTemplateAccessor;
 import com.saloeater.structure_analyzer.network.SearchRequest;
 import com.saloeater.structure_analyzer.util.EMIHack;
 import com.saloeater.structure_analyzer.util.JEIHackStorage;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
@@ -14,20 +12,23 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.FileToIdConverter;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ClientSearchManager {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static CompletableFuture<Void> activeSearch = null;
+    // CompletableFuture.cancel() never interrupts the running thread, so the search loops
+    // watch this flag instead of Thread.isInterrupted()
+    private static AtomicBoolean cancelled = new AtomicBoolean(false);
 
     public static void startSearch(SearchRequest request) {
         if (activeSearch != null && !activeSearch.isDone()) {
@@ -37,17 +38,23 @@ public class ClientSearchManager {
 
         LOGGER.info("Starting client-side search with type: {}", request.type());
 
+        AtomicBoolean token = new AtomicBoolean(false);
+        cancelled = token;
+
         activeSearch = CompletableFuture.runAsync(() -> {
             try {
                 if (request.type() == SearchRequest.TYPE_STRUCTURE) {
-                    searchStructures(request);
+                    searchStructures(request, token);
                 } else if (request.type() == SearchRequest.TYPE_BIOME) {
-                    searchBiomes(request);
+                    searchBiomes(request, token);
                 }
             } catch (Exception e) {
                 LOGGER.error("Error during search", e);
             }
         }).thenRun(() -> {
+            if (token.get()) {
+                return;
+            }
             LOGGER.info("Search completed");
             Minecraft.getInstance().execute(() -> {
                 ClientSearchState.markSearchCompleted(request);
@@ -59,13 +66,14 @@ public class ClientSearchManager {
 
     public static void stopSearch() {
         if (activeSearch != null) {
+            cancelled.set(true);
             activeSearch.cancel(true);
             activeSearch = null;
             LOGGER.info("Search stopped");
         }
     }
 
-    private static void searchBiomes(SearchRequest request) {
+    private static void searchBiomes(SearchRequest request, AtomicBoolean cancelled) {
         if (request.entity() == null) {
             LOGGER.warn("Received biome search request with null entity");
             return;
@@ -92,7 +100,7 @@ public class ClientSearchManager {
         });
 
         for (var biomeEntry : biomes.entrySet()) {
-            if (Thread.currentThread().isInterrupted()) {
+            if (cancelled.get()) {
                 LOGGER.info("Search interrupted");
                 return;
             }
@@ -128,7 +136,7 @@ public class ClientSearchManager {
         }
     }
 
-    private static void searchStructures(SearchRequest request) {
+    private static void searchStructures(SearchRequest request, AtomicBoolean cancelled) {
         if (request.block() == null && request.entity() == null) {
             LOGGER.warn("Received structure search request with null block and entity");
             return;
@@ -136,23 +144,17 @@ public class ClientSearchManager {
 
         FileToIdConverter lister = new FileToIdConverter("structures", ".nbt");
         ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
-        var level = Minecraft.getInstance().level;
-        if (level == null) {
-            LOGGER.warn("Cannot search structures - level is null");
-            return;
-        }
 
-        // Collect all structures from all packs
+        // Collect all structures from all packs. Streams are opened lazily inside the loop below -
+        // opening them here would keep a handle on every structure file for the whole search.
         var packs = resourceManager.listPacks().toList();
-        Map<ResourceLocation, InputStream> structureMap = new HashMap<>();
+        Map<ResourceLocation, IoSupplier<InputStream>> structureMap = new HashMap<>();
 
         for (var pack : packs) {
             for (String namespace : pack.getNamespaces(PackType.SERVER_DATA)) {
                 pack.listResources(PackType.SERVER_DATA, namespace, "structures", (resourceLocation, ioSupplier) -> {
-                    try {
-                        structureMap.put(resourceLocation, ioSupplier.get());
-                    } catch (IOException e) {
-                        LOGGER.error("Error reading structure from pack: {}", resourceLocation, e);
+                    if (resourceLocation.getPath().endsWith(".nbt")) {
+                        structureMap.put(resourceLocation, ioSupplier);
                     }
                 });
             }
@@ -166,76 +168,25 @@ public class ClientSearchManager {
         });
 
         for (var entry : structureMap.entrySet()) {
-            if (Thread.currentThread().isInterrupted()) {
+            if (cancelled.get()) {
                 LOGGER.info("Search interrupted");
                 return;
             }
 
             ResourceLocation structureId = entry.getKey();
-            try (InputStream stream = entry.getValue()) {
+            try (InputStream stream = entry.getValue().get()) {
                 CompoundTag tag = NbtIo.readCompressed(stream);
-                var template = new StructureTemplate();
-                var blocks = level.registryAccess().registry(Registries.BLOCK);
-                if (blocks.isEmpty()) {
-                    continue;
-                }
-                template.load(blocks.get().asLookup(), tag);
-                StructureTemplateAccessor accessor = (StructureTemplateAccessor) template;
 
-                boolean found = false;
-
-                // Search by block
-                if (request.block() != null) {
-                    var palettes = accessor.getPalettes();
-                    for (var palette : palettes) {
-                        for (var blockInfo : palette.blocks()) {
-                            ResourceLocation blockId = ForgeRegistries.BLOCKS.getKey(blockInfo.state().getBlock());
-                            if (blockId != null && blockId.equals(request.block())) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (found) break;
-                    }
-                }
-
-                // Search by entity
-                if (!found && request.entity() != null) {
-                    var entityInfoList = accessor.getEntityInfoList();
-                    for (var entityInfo : entityInfoList) {
-                        var entityNbt = entityInfo.nbt;
-                        if (entityNbt.contains("id")) {
-                            ResourceLocation entityId = ResourceLocation.tryParse(entityNbt.getString("id"));
-                            if (entityId != null && entityId.equals(request.entity())) {
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Search by spawners that spawn the entity
-                if (!found && request.entity() != null) {
-                    outer:
-                    for (var palette : accessor.getPalettes()) {
-                        for (var blockInfo : palette.blocks()) {
-                            CompoundTag blockNbt = blockInfo.nbt();
-                            if (blockNbt != null && spawnerSpawnsEntity(blockNbt, request.entity())) {
-                                found = true;
-                                break outer;
-                            }
-                        }
-                    }
-                }
-
-                if (found) {
+                if (matchesStructure(tag, request)) {
                     ResourceLocation structureName = lister.fileToId(structureId);
                     LOGGER.info("Found structure: {}", structureName);
                     Minecraft.getInstance().execute(() -> {
                         ClientSearchState.addFoundStructure(request, structureName);
                     });
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
+                // Never let a single unreadable structure - or a third party mixin throwing while
+                // reading one - abort the rest of the search
                 LOGGER.error("Error loading structure: {}", structureId, e);
             }
 
@@ -246,6 +197,63 @@ public class ClientSearchManager {
                 EMIHack.reloadEMIScreen();
             });
         }
+    }
+
+    // The structure NBT is read directly instead of going through StructureTemplate.load():
+    // loading resolves every palette entry against the block registry, which makes blocks from
+    // absent mods silently collapse into air (so they can never be matched) and lets mixins other
+    // mods put on StructureBlockInfo throw while we are only trying to read ids.
+    private static boolean matchesStructure(CompoundTag tag, SearchRequest request) {
+        if (request.block() != null && containsBlock(tag, request.block())) {
+            return true;
+        }
+
+        if (request.entity() == null) {
+            return false;
+        }
+
+        // Search by entity
+        ListTag entities = tag.getList("entities", Tag.TAG_COMPOUND);
+        for (int i = 0; i < entities.size(); i++) {
+            if (matchesEntityId(entities.getCompound(i).getCompound("nbt"), request.entity())) {
+                return true;
+            }
+        }
+
+        // Search by spawners that spawn the entity - block entity nbt lives on the block entries,
+        // not on the palette
+        ListTag blocks = tag.getList("blocks", Tag.TAG_COMPOUND);
+        for (int i = 0; i < blocks.size(); i++) {
+            CompoundTag blockNbt = blocks.getCompound(i).getCompound("nbt");
+            if (!blockNbt.isEmpty() && spawnerSpawnsEntity(blockNbt, request.entity())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean containsBlock(CompoundTag tag, ResourceLocation block) {
+        // Structures with block variants store "palettes" (a list of palettes) instead of "palette"
+        ListTag palettes = tag.getList("palettes", Tag.TAG_LIST);
+        if (!palettes.isEmpty()) {
+            for (int i = 0; i < palettes.size(); i++) {
+                if (paletteContains(palettes.getList(i), block)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return paletteContains(tag.getList("palette", Tag.TAG_COMPOUND), block);
+    }
+
+    private static boolean paletteContains(ListTag palette, ResourceLocation block) {
+        for (int i = 0; i < palette.size(); i++) {
+            if (block.equals(ResourceLocation.tryParse(palette.getCompound(i).getString("Name")))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Matches any block entity using the vanilla spawner NBT format (SpawnData/SpawnPotentials),
